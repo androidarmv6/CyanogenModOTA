@@ -58,9 +58,32 @@
             'errors' => null
         );
 
-//        $tokens = new TokenCollection(realpath('./_builds/'));
-//        $delta = $tokens->getDeltaUpdate();
-$delta = false;
+        $delta = false;	
+        $req = Flight::request();
+        $postJson = json_decode($req->body, true);
+        if ($postJson != NULL &&
+            array_key_exists('source_incremental', $postJson) &&
+            array_key_exists('target_incremental', $postJson)) {
+            $source_incremental = $postJson['source_incremental'];
+            $target_incremental = $postJson['target_incremental'];
+            if (!empty($source_incremental) && !empty($target_incremental) &&
+                $source_incremental != $target_incremental) {
+                $mc = Flight::mc();
+                $source = $mc->get($source_incremental);
+                $target = $mc->get($target_incremental);
+                if ($source && $target) {
+                    $sourceBuildProp = $mc->get($source);
+                    $targetBuildProp = $mc->get($target);
+                    $sourceDevice = Token::getBuildPropValue(explode("\n", $sourceBuildProp[0], 'ro.cm.device'));
+                    $targetDevice = Token::getBuildPropValue(explode("\n", $targetBuildProp[0], 'ro.cm.device'));
+                    if ($sourceDevice == $targetDevice) {
+                        $deltaPath = realpath('./_deltas/'.$sourceDevice);
+                        $deltaFile = 'incremental-'.$source_incremental.'-'.$target_incremental.'.zip';
+                        $delta = Token::getDeltaIncremental($source, $target, $target_incremental, $deltaPath, $deltaFile);
+                    }
+                }
+            }
+        }
 
         if ( $delta === false ) {
             $ret['errors'] = array(

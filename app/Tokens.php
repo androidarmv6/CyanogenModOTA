@@ -54,8 +54,8 @@
             $mcFile = $this->mcCacheProps($this->filePath); // ANDROIDMEDA
             $this->buildProp = explode("\n", $mcFile[0] ); // ANDROIDMEDA
             $this->md5file = $mcFile[1]; // ANDROIDMEDA
-            $this->incremental = $this->getBuildPropValue('ro.build.version.incremental');
-            $this->api_level = $this->getBuildPropValue('ro.build.version.sdk');
+            $this->incremental = Token::getBuildPropValue($this->buildProp, 'ro.build.version.incremental');
+            $this->api_level = Token::getBuildPropValue($this->buildProp, 'ro.build.version.sdk');
             $this->channel = $this->getChannel( str_replace(range(0,9), '', $tokens[3]) );
             $this->filename = $fileName;
             $this->url = $this->getUrl($this->url);
@@ -76,30 +76,31 @@
 
             return $ret;
         }
-        public function getDelta($targetToken){
+
+
+        public static function getDeltaIncremental($source, $target, $target_incremental, $deltaPath, $deltaFile){
             $ret = false;
-
-            $deltaFile = $this->incremental.'-'.$targetToken->incremental.'.zip';
-            $deltaFilePath = dirname( $this->filePath ).'/'.$deltaFile;
-
-            if ( $this->commandExists('xdelta3') ) {
-
-                if ( !file_exists($deltaFilePath) ) {
-                    exec( 'xdelta3 -e -s '.$this->filePath.' '.$targetToken->filePath.' '.$deltaFilePath );
-                }
-
-                $ret = array(
-                    'filename' => $deltaFile,
-                    'timestamp' => filemtime( $deltaFilePath ),
-                    'md5' => $this->getMD5( $deltaFilePath ),
-                    'url' => $this->getUrl( $deltaFile ),
-                    'api_level' => $this->api_level,
-                    'incremental' => $targetToken->incremental
-                );
-            }
-
-            return $ret;
+            $deltaFullPath = $deltaPath . '/' . $deltaFile;
+            if (file_exists($deltaFullPath)) {
+                $mc = Flight::mc();
+                $ret = $mc->get($deltaFullPath);
+                if (!$ret) {
+                    if ($mc->getResultCode() == Memcached::RES_NOTFOUND) {
+                        $ret = array(
+                            'filename' => $deltaFile,
+                            'timestamp' => filemtime( $deltaFullPath ),
+                            'md5' => $this->getMD5( $deltaFullPath ),
+                            'url' => $this->getUrl( $deltaFile ),
+                            'api_level' => $this->api_level,
+                            'incremental' => $target_incremental
+                         );
+                         $mc->set($deltaFullPath, $ret);
+                    }
+               }
+           }
+           return $ret;
         }
+
         public function getMD5($file){
             $ret = '';
 
@@ -140,10 +141,11 @@
         private function getChangelogUrl(){
             return str_replace('.zip', '.txt', $this->url);
         }
-        private function getBuildPropValue($key){
+
+        public static function getBuildPropValue($buildProp, $key){
             $ret = '';
 
-            foreach ($this->buildProp as $line) {
+            foreach ($buildProp as $line) {
                 if ( strpos($line, $key) !== false ) {
                     $tmp = explode('=', $line);
                     $ret = $tmp[1];
@@ -164,10 +166,11 @@
             $ret = $mc->get($filePath);
             if (!$ret) {
                 if ($mc->getResultCode() == Memcached::RES_NOTFOUND) {
-                    $ret = array( file_get_contents('zip://'.$filePath.'#system/build.prop'),
-                                  $this->getMD5($filePath)
-                                );
+                    $buildprop = file_get_contents('zip://'.$filePath.'#system/build.prop');
+                    $incremental = self::getBuildPropValue(explode("\n", $buildprop), 'ro.build.version.incremental');
+                    $ret = array($buildprop, $this->getMD5($filePath));
                     $mc->set($filePath, $ret);
+                    $mc->set($incremental, $filePath);
                 }
            }
            return $ret;
