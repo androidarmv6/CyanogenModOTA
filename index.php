@@ -54,7 +54,17 @@
            $device = $postJson['params']['device'];
            $devicePath = realpath('./_builds/'.$device);
            if (file_exists($devicePath)) {
-               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device);
+               $after = 0;
+               if (array_key_exists('source_incremental', $postJson['params'])) {
+                   $source_incremental = $postJson['params']['source_incremental'];
+                   $mc = Flight::mc();
+                   $source_zip = $mc->get($source_incremental);
+                   if ($source_zip && file_exists($source_zip)) {
+                       $after = filemtime($source_zip);
+                   }
+               }
+
+               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device, $after);
                $ret['result'] = $tokens->getUpdateList();
            }
         }
