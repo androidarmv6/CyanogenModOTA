@@ -65,17 +65,21 @@
             $this->timestamp = filemtime($this->filePath);
         }
 
-        public function isValid($params) {
-            $ret = false;
+        public function isValid($params, $fileinfo, $after) {
+
+            if ($after > 0 && $fileinfo->getMTime() < $after) {
+                return false;
+            }
+
             if (array_key_exists('channels', $params)) {
                 foreach ($params['channels'] as $channel) {
                     if (strtolower($channel) == $this->channel) {
-                        $ret = true;
-                        break;
+                        return true;
                     }
                 }
             }
-            return $ret;
+
+            return false;
         }
 
         private function removeTrailingDashes($token){
