@@ -54,7 +54,24 @@
            $device = $postJson['params']['device'];
            $devicePath = realpath('./_builds/'.$device);
            if (file_exists($devicePath)) {
-               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device);
+               $after = 0;
+               if (array_key_exists('source_incremental', $postJson['params'])) {
+                   $source_incremental = $postJson['params']['source_incremental'];
+                   if (!empty($source_incremental)) {
+                       $mc = Flight::mc();
+                       $source_zip = $mc->get($source_incremental);
+                       if ($source_zip) {
+                           if (file_exists($source_zip)) {
+                               $after = filemtime($source_zip);
+                           } else {
+                               $mc->delete($source_zip);
+                               $mc->delete($source_incremental);
+                           }
+                       }
+                   }
+               }
+
+               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device, $after);
                $ret['result'] = $tokens->getUpdateList();
            }
         }
@@ -81,16 +98,17 @@
                 $mc = Flight::mc();
                 $source_zip = $mc->get($source_incremental);
                 $target_zip = $mc->get($target_incremental);
-                $found = true;
                 if ($source_zip && !file_exists($source_zip)) {
                     $mc->delete($source_zip);
-                    $found = false;
+                    $mc->delete($source_incremental);
+                    $source_zip = NULL;
                 }
                 if ($target_zip && !file_exists($target_zip)) {
                     $mc->delete($target_zip);
-                    $found = false;
+                    $mc->delete($target_incremental);
+                    $target_zip = NULL;
                 }
-                if ($found && $source_zip && $target_zip) {
+                if ($source_zip && $target_zip) {
                     $sourceBuildProp = $mc->get($source_zip);
                     $targetBuildProp = $mc->get($target_zip);
                     if ($sourceBuildProp && $targetBuildProp) {
