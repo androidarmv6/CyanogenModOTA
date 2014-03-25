@@ -26,11 +26,23 @@
         var $list = array();
 
         public function __construct($postJson, $physicalPath, $baseUrl, $device) {
-            $files = preg_grep('/^([^.])/', scandir($physicalPath));
-            if (count($files) > 0) {
-                foreach ($files as $file) {
-                    $token = new Token($file, $physicalPath, $baseUrl, $device);
-                    if ($token->isValid($postJson['params'])) {
+
+            $after = 0;
+            if (array_key_exists('source_incremental', $postJson['params'])) {
+                $source_incremental = $postJson['params']['source_incremental'];
+                $mc = Flight::mc();
+                $source_zip = $mc->get($source_incremental);
+                if ($source_zip && file_exists($source_zip)) {
+                    $after = filemtime($source_zip);
+                }
+            }
+
+            $dirIterator = new DirectoryIterator($physicalPath);
+            foreach ($dirIterator as $fileinfo) {
+                if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip') {
+                    $fileName = $fileinfo->getFilename();
+                    $token = new Token($fileName, $physicalPath, $baseUrl, $device);
+                    if ($token->isValid($postJson['params'], $fileinfo, $after)) {
                         array_push($this->list, $token);
                     }
                 }
