@@ -54,7 +54,24 @@
            $device = $postJson['params']['device'];
            $devicePath = realpath('./_builds/'.$device);
            if (file_exists($devicePath)) {
-               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device);
+               $after = 0;
+               if (array_key_exists('source_incremental', $postJson['params'])) {
+                   $source_incremental = $postJson['params']['source_incremental'];
+                   if (!empty($source_incremental)) {
+                       $mc = Flight::mc();
+                       $source_zip = $mc->get($source_incremental);
+                       if ($source_zip) {
+                           if (file_exists($source_zip)) {
+                               $after = filemtime($source_zip);
+                           } else {
+                               //$mc->delete($source_zip);
+                               //$mc->delete($source_incremental);
+                           }
+                       }
+                   }
+               }
+
+               $tokens = new TokenCollection($postJson, $devicePath, $req->base, $device, $after);
                $ret['result'] = $tokens->getUpdateList();
            }
         }
@@ -83,11 +100,13 @@
                 $target_zip = $mc->get($target_incremental);
                 $found = true;
                 if ($source_zip && !file_exists($source_zip)) {
-                    $mc->delete($source_zip);
+                    //$mc->delete($source_zip);
+                    //$mc->delete($source_incremental);
                     $found = false;
                 }
                 if ($target_zip && !file_exists($target_zip)) {
-                    $mc->delete($target_zip);
+                    //$mc->delete($target_zip);
+                    //$mc->delete($target_incremental);
                     $found = false;
                 }
                 if ($found && $source_zip && $target_zip) {
