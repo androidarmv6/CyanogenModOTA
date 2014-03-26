@@ -29,11 +29,21 @@
 
             $dirIterator = new DirectoryIterator($physicalPath);
             foreach ($dirIterator as $fileinfo) {
-                if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip') {
+                if ($fileinfo->isDir() && $fileinfo->getFilename() == 'stable') {
+                    // Include all stable releases
+                    $stableDirIterator = new DirectoryIterator($physicalPath . '/stable');
+                    foreach ($stableDirIterator as $stablefileinfo) {
+                        if ($stablefileinfo->isFile() && $stablefileinfo->getExtension() == 'zip') {
+                            $token = new Token($stablefileinfo->getFilename(), $physicalPath . '/stable', $baseUrl, $device, true);
+                            array_push($this->list, $token);
+                        }
+                    }
+                }
+                elseif ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip') {
                     if ($after > 0 && $fileinfo->getMTime() < $after) {
                         continue;
                     }
-                    $token = new Token($fileinfo->getFilename(), $physicalPath, $baseUrl, $device);
+                    $token = new Token($fileinfo->getFilename(), $physicalPath, $baseUrl, $device, false);
                     if ($token->isValid($postJson['params'])) {
                         array_push($this->list, $token);
                     }
