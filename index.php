@@ -64,11 +64,7 @@
 
     // Deltas
     Flight::route('/api/v1/build/get_delta', function(){
-        $ret = array(
-            'errors' => null
-        );
-
-        $delta = false;	
+        $ret = array();
         $req = Flight::request();
         $postJson = json_decode($req->body, true);
         if ($postJson != NULL &&
@@ -98,19 +94,17 @@
                         $targetDevice = Utils::getBuildPropValue(explode("\n", $targetBuildProp[0]), 'ro.cm.device');
                         $targetApi = Utils::getBuildPropValue(explode("\n", $targetBuildProp[0]), 'ro.build.version.sdk');
                         if ($sourceDevice == $targetDevice) {
-                            $delta = Utils::getDeltaIncremental($targetDevice, $source_incremental, $target_incremental, $targetApi);
+                            $ret = Utils::getDeltaIncremental($targetDevice, $source_incremental, $target_incremental, $targetApi);
                         }
                     }
                 }
             }
         }
 
-        if ($delta === false) {
+        if (empty($ret)) {
             $ret['errors'] = array(
                 'message' => 'Unable to find delta'
             );
-        } else {
-            array_merge($ret, $delta);
         }
 
         Flight::json($ret);
