@@ -66,11 +66,9 @@
                        $source_zip = NULL;
                    }
                }
-               $channels = array('stable');
-               if (!empty($postJson->params->channels)) {
-                   $channels = $postJson->params->channels;
-               }
-               $tokens = new TokenCollection($channels, $devicePath, $device);
+               $channels = empty($postJson->params->channels) ? array('stable') : $postJson->params->channels;
+               $limit = empty($postJson->params->limit) ? 100 : intval($postJson->params->limit);
+               $tokens = new TokenCollection($channels, $devicePath, $device, $limit);
                $ret['result'] = $tokens->getUpdateList();
            }
         }
