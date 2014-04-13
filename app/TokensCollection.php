@@ -24,8 +24,12 @@
 
     class TokenCollection {
         var $list = array();
+        var $limit = 100;
 
-        public function __construct($channels, $physicalPath, $device) {
+        public function __construct($channels, $physicalPath, $device, $limit) {
+            if ($limit > 0) {
+                $this->limit = $limit;
+            }
             if (in_array('stable', $channels)) {
                 $stableDir = $physicalPath . '/stable';
                 $this->add($stableDir, $device, 'stable');
@@ -48,10 +52,20 @@
             }
         }
 
+        private static function tokenSort($tokenA, $tokenB) {
+            // Reverse order
+            return $tokenB->timestamp - $tokenA->timestamp;
+        }
+
         public function getUpdateList(){
             $ret = array();
-            foreach ($this->list as $token) {
-                array_push($ret, array(
+            usort($this->list, array('TokenCollection','tokenSort'));
+            $arrayCount = count($this->list);
+            for ($count = 0;
+                 $count < $this->limit && $count < $arrayCount;
+                 $count++) {
+                 $token = $this->list[$count];
+                 array_push($ret, array(
                     'url' => $token->url,
                     'timestamp' => $token->timestamp,
                     'md5sum' => $token->md5file,
@@ -61,6 +75,7 @@
                     'changes' => $token->changelogUrl,
                     'api_level' => $token->api_level
                 ));
+
             }
             return $ret;
         }
