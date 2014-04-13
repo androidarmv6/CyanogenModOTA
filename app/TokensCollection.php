@@ -48,10 +48,20 @@
             }
         }
 
-        public function getUpdateList(){
+        private static function tokenSort($tokenA, $tokenB) {
+            // Reverse order
+            return $tokenB->timestamp - $tokenA->timestamp;
+        }
+
+        public function getUpdateList($limit) {
             $ret = array();
-            foreach ($this->list as $token) {
-                array_push($ret, array(
+            usort($this->list, array('TokenCollection','tokenSort'));
+            $arrayCount = count($this->list);
+            for ($count = 0;
+                 $count < $limit && $count < $arrayCount;
+                 $count++) {
+                 $token = $this->list[$count];
+                 array_push($ret, array(
                     'url' => $token->url,
                     'timestamp' => $token->timestamp,
                     'md5sum' => $token->md5file,
@@ -61,6 +71,7 @@
                     'changes' => $token->changelogUrl,
                     'api_level' => $token->api_level
                 ));
+
             }
             return $ret;
         }
