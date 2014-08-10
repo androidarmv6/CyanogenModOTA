@@ -20,6 +20,7 @@ I've implemented a [simple script made for NodeJS](https://github.com/julianxhok
 - For more information: build/target/product/security/README
 
 ##Changelog
+- 1.2.4: Update flight engine to v1.2
 - 1.2.3: Final. Reduce memcache usage. Add example nginx config.
 - 1.2.2: Offer new updates only if development or release channel is selected
 - 1.2.1: Offer stable channel only if source_incremental provided

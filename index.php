@@ -51,8 +51,7 @@
             'error' => null
         );
 
-        $req = Flight::request();
-        $postJson = json_decode($req->body);
+        $postJson = json_decode(Flight::request()->getBody());
         if ($postJson != NULL && !empty($postJson->params) && !empty($postJson->params->device)) {
             $device = $postJson->params->device;
             $devicePath = realpath('./_builds/'.$device);
@@ -83,8 +82,7 @@
     // Deltas
     Flight::route('/api/v1/build/get_delta', function(){
         $ret = array();
-        $req = Flight::request();
-        $postJson = json_decode($req->body);
+        $postJson = json_decode(Flight::request()->getBody());
         if ($postJson != NULL && !empty($postJson->source_incremental) && !empty($postJson->target_incremental)) {
             registerMemcached();
             $ret = Delta::find($postJson->source_incremental, $postJson->target_incremental);
