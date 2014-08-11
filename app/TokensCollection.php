@@ -60,13 +60,14 @@
                 }
             }
             $count = count($sortedArray);
+            $i = 0;
             if ($count > 0) {
                 usort($sortedArray, function($a,$b){ /*Reverse order (b-a)*/ return $b->timestamp - $a->timestamp; });
                 for($i = 0; $i < $count && $i < $limit; $i++) {
                     $this->list[] = $sortedArray[$i];
                 }
             }
-            return $count;
+            return $i;
         }
 
         public function getUpdateList() {
