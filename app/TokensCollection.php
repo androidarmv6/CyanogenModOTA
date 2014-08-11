@@ -25,36 +25,54 @@
     class TokenCollection {
         private $list = array();
 
-        public function __construct($channels, $physicalPath, $device, $after) {
+        public function __construct($channels, $physicalPath, $device, $after, $limit)
+        {
+            $total = 0;
+            $stable_limit = $limit;
+            $nightly_limit = $limit;
+            // Provide 25% stable build if all channels are requested
+            if (in_array('stable', $channels) && in_array('nightly', $channels)) {
+                $stable_limit = (int)($limit / 4);
+            }
             if (in_array('stable', $channels)) {
-                $this->add($physicalPath.'/stable', $device, $after, 'stable');
+                $total = $this->add($physicalPath.'/stable', $device, $after, 'stable', $stable_limit);
             }
             if (in_array('nightly', $channels)) {
-                $this->add($physicalPath, $device, $after, 'nightly');
+                $nightly_limit = $limit - $total;
+                $this->add($physicalPath, $device, $after, 'nightly', $nightly_limit);
             }
         }
 
-        private function add($dir, $device, $after, $channel) {
+        private function add($dir, $device, $after, $channel, $limit)
+        {
             if (!file_exists($dir))
-                return;
+                return 0;
 
+            $sortedArray = array();
             $dirIterator = new DirectoryIterator($dir);
             foreach ($dirIterator as $fileinfo) {
                 if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip' &&
                     file_exists($dir.'/'.$fileinfo->getFilename().'.md5sum')) {
                     $token = new Token($fileinfo->getFilename(), $dir, $device, $channel);
                     if ($token->timestamp > $after) {
-                        $this->list[] = $token;
+                        $sortedArray[] = $token;
                     }
                 }
             }
+            $count = count($sortedArray);
+            if ($count > 0) {
+                usort($sortedArray, function($a,$b){ /*Reverse order (b-a)*/ return $b->timestamp - $a->timestamp; });
+                for($i = 0; $i < $count && $i < $limit; $i++) {
+                    $this->list[] = $sortedArray[$i];
+                }
+            }
+            return $count;
         }
 
-        public function getUpdateList($limit) {
+        public function getUpdateList() {
             $ret = array();
             $count = count($this->list);
-            usort($this->list, function($a,$b){ /*Reverse order (b-a)*/ return $b->timestamp - $a->timestamp; });
-            for ($i = 0; $i < $count && $i < $limit; $i++) {
+            for ($i = 0; $i < $count; $i++) {
                  $token = $this->list[$i];
                  $ret[] = array(
                     'url' => $token->url,

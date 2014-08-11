@@ -71,8 +71,8 @@
                         $channels[] = 'stable'; // We offer stable releases by default for CMUpdater
                     }
                 }
-                $tokens = new TokenCollection($channels, $devicePath, $device, $after);
-                $ret['result'] = $tokens->getUpdateList($limit);
+                $tokens = new TokenCollection($channels, $devicePath, $device, $after, $limit);
+                $ret['result'] = $tokens->getUpdateList();
             }
         }
 
