@@ -22,13 +22,7 @@
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
 
-    require 'lib/flight/Flight.php';
-
-    require 'Tokens.php';
-    require 'TokensCollection.php';
-    require 'Utils.php';
-    require 'Delta.php';
-    require 'Cache.php';
+    require_once 'lib/flight/Flight.php';
 
     // Memcached
     global $MEMCACHED;
@@ -39,6 +33,11 @@
     {
         public static function HandleApi()
         {
+            require_once 'Cache.php';
+            require_once 'Tokens.php';
+            require_once 'TokensCollection.php';
+            require_once 'Utils.php';
+
             $ret = array('id' => null, 'result' => array(), 'error' => null);
             $postJson = json_decode(Flight::request()->getBody());
             if ($postJson != NULL && !empty($postJson->params) && !empty($postJson->params->device)) {
@@ -69,6 +68,10 @@
 
         public static function HandleGetDelta()
         {
+           require_once 'Cache.php';
+           require_once 'Delta.php';
+           require_once 'Utils.php';
+
            $ret = array();
            $postJson = json_decode(Flight::request()->getBody());
            if ($postJson != NULL && !empty($postJson->source_incremental) && !empty($postJson->target_incremental)) {
