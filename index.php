@@ -22,78 +22,8 @@
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
 
-    require 'lib/flight/Flight.php';
+    require 'app/App.php';
 
-    require 'app/Tokens.php';
-    require 'app/TokensCollection.php';
-    require 'app/Utils.php';
-    require 'app/Delta.php';
-    require 'app/Cache.php';
-
-    // Memcached
-    global $MEMCACHED;
-    $MEMCACHED = NULL;
-
-    // Root dir
-    Flight::route('/', function(){
-        Flight::redirect('/_builds/');
-    });
-
-    // All builds
-    Flight::route('/api', function(){
-        $ret = array(
-            'id' => null,
-            'result' => array(),
-            'error' => null
-        );
-
-        $postJson = json_decode(Flight::request()->getBody());
-        if ($postJson != NULL && !empty($postJson->params) && !empty($postJson->params->device)) {
-            $device = $postJson->params->device;
-            $devicePath = realpath('./_builds/'.$device);
-            if (file_exists($devicePath)) {
-                $after = 0;
-                $limit = empty($postJson->params->limit) ? 25 : intval($postJson->params->limit);
-                $channels = empty($postJson->params->channels) ? array() : $postJson->params->channels;
-                Cache::registerMemcached();
-                // Source_incremental is provided by CMUpdater
-                if (!empty($postJson->params->source_incremental)) {
-                    // Offer only new builds after source rom.
-                    list(,,$after,) = Cache::mcFind($postJson->params->source_incremental);
-                    if (in_array('snapshot', $channels) && in_array('nightly', $channels)) {
-                        $after = 0; // 'All versions' is selected, disable time check and offer older builds.
-                    }
-                    if (!in_array('stable', $channels)) {
-                        $channels[] = 'stable'; // We offer stable releases by default for CMUpdater
-                    }
-                }
-                $tokens = new TokenCollection($channels, $devicePath, $device, $after, $limit);
-                $ret['result'] = $tokens->getUpdateList();
-            }
-        }
-
-        Flight::json($ret);
-    });
-
-    // Deltas
-    Flight::route('/api/v1/build/get_delta', function(){
-        $ret = array();
-        $postJson = json_decode(Flight::request()->getBody());
-        if ($postJson != NULL && !empty($postJson->source_incremental) && !empty($postJson->target_incremental)) {
-            Cache::registerMemcached();
-            $ret = Delta::find($postJson->source_incremental, $postJson->target_incremental);
-        }
-        if (empty($ret)) {
-            $ret['errors'] = array('message' => 'Unable to find delta');
-        }
-
-        Flight::json($ret);
-    });
-
-    Flight::map('notFound', function(){
-        // Display custom 404 page
-        echo 'Sorry, 404!';
-    });
-
-    Flight::start();
+    $app = new CmOta();
+    $app->run();
 ?>
