@@ -24,17 +24,18 @@
 
     class Delta {
 
-        public static function find($source_incremental, $target_incremental) {
+        public static function find($source_incremental, $target_incremental)
+        {
             $ret = array();
             if (empty($source_incremental) || empty($target_incremental) ||
                 $source_incremental == $target_incremental) {
                 return $ret;
             }
-            list($source_device, $source_channel, $source_timestamp, $source_zip) = Utils::mcFind($source_incremental);
+            list($source_device, $source_channel, $source_timestamp, $source_zip) = Cache::mcFind($source_incremental);
             if (empty($source_zip)) {
                 return $ret;
             }
-            list($target_device, $target_channel, $target_timestamp, $target_zip) = Utils::mcFind($target_incremental);
+            list($target_device, $target_channel, $target_timestamp, $target_zip) = Cache::mcFind($target_incremental);
             if (empty($target_zip)) {
                 return $ret;
             }

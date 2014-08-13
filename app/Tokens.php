@@ -41,44 +41,10 @@
             $this->api_level,
             $this->incremental,
             $this->timestamp,
-            $this->md5sum) = $this->mcCacheProps($physicalPath.'/'.$fileName, $device, $channel);
+            $this->md5sum) = Cache::mcCacheProps($physicalPath.'/'.$fileName, $device, $channel);
             $this->channel = $channel;
             $this->filename = $fileName;
             $this->url = Utils::getUrl($fileName, $device, false, $channel);
             $this->changes = str_replace('.zip', '.txt', $this->url);
-        }
-
-        private function mcCacheProps($filePath, $device, $channel) {
-            $mc = Flight::mc();
-            $cache = $mc->get($filePath);
-            if ($cache && $cache[0] != $device) {
-                throw new Exception("$device != " . $cache[0] . " : cache corrupt");
-            }
-            elseif (!$cache && Memcached::RES_NOTFOUND == $mc->getResultCode()) {
-                $buildpropArray = explode("\n", file_get_contents('zip://'.$filePath.'#system/build.prop'));
-                if ($device == $this->getBuildPropValue($buildpropArray, 'ro.product.device')) {
-                    $api_level = intval($this->getBuildPropValue($buildpropArray, 'ro.build.version.sdk'));
-                    $incremental = $this->getBuildPropValue($buildpropArray, 'ro.build.version.incremental');
-                    $timestamp = intval($this->getBuildPropValue($buildpropArray, 'ro.build.date.utc'));
-                    $cache = array($device, $api_level, $incremental, $timestamp, Utils::getMD5($filePath));
-                    $mc->set($filePath, $cache);
-                    $mc->set($incremental, array($device, $channel, $timestamp, $filePath));
-                } else {
-                    throw new Exception("$device: $filePath is in invalid path");
-                }
-            }
-            return $cache;
-        }
-
-        private function getBuildPropValue($buildProp, $key) {
-            foreach ($buildProp as $line) {
-                if (!empty($line) && strncmp($line, '#', 1) != 0) {
-                    list($k, $v) = explode('=', $line, 2);
-                    if ($k == $key) {
-                        return $v;
-                    }
-                }
-            }
-            return '';
         }
     };

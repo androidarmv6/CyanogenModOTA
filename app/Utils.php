@@ -24,20 +24,6 @@
 
     class Utils {
 
-        public static function mcFind($incremental) {
-            $mc = Flight::mc();
-            list($device, $channel, $timestamp, $zip) = $mc->get($incremental);
-            if ($zip && !file_exists($zip)) {
-                $mc->delete($zip);
-                $mc->delete($incremental);
-                $zip = NULL;
-                $timestamp = 0;
-                $channel = NULL;
-                $device = NULL;
-            }
-            return array($device, $channel, $timestamp, $zip);
-        }
-
         public static function getUrl($fileName, $device, $isDelta, $channel) {
             $dldir = $isDelta ? '_deltas' : '_builds';
             $channelDir = ($channel == 'stable') ? 'stable/' : '';
@@ -51,5 +37,17 @@
                 list($ret,) = explode("  ", file_get_contents($md5sumFile));
             }
             return $ret;
+        }
+
+        public static function getBuildPropValue($buildProp, $key) {
+            foreach ($buildProp as $line) {
+                if (!empty($line) && strncmp($line, '#', 1) != 0) {
+                    list($k, $v) = explode('=', $line, 2);
+                    if ($k == $key) {
+                        return $v;
+                    }
+                }
+            }
+            return '';
         }
     };
