@@ -42,7 +42,7 @@ class Route {
     /**
      * @var string URL splat content
      */
-    public $splat;
+    public $splat = '';
 
     /**
      * @var boolean Pass self in callback parameters
@@ -74,18 +74,31 @@ class Route {
         // Wildcard or exact match
         if ($this->pattern === '*' || $this->pattern === $url) {
             if ($this->pass) {
-                array_push($this->params, $this);
+                $this->params[] = $this;
             }
             return true;
         }
 
         $ids = array();
-        $char = substr($this->pattern, -1);
+        $last_char = substr($this->pattern, -1);
 
-        $this->splat = substr($url, strpos($this->pattern, '*'));
-        $this->pattern = str_replace(array(')','*'), array(')?','.*?'), $this->pattern);
+        // Get splat
+        if ($last_char === '*') {
+            $n = 0;
+            $len = strlen($url);
+            $count = substr_count($this->pattern, '/');
+
+            for ($i = 0; $i < $len; $i++) {
+                if ($url[$i] == '/') $n++;
+                if ($n == $count) break;
+            }
+
+            $this->splat = (string)substr($url, $i+1);
+        }
 
         // Build the regex for matching
+        $regex = str_replace(array(')','/*'), array(')?','(/?|/.*?)'), $this->pattern);
+
         $regex = preg_replace_callback(
             '#@([\w]+)(:([^/\(\)]*))?#',
             function($matches) use (&$ids) {
@@ -95,11 +108,11 @@ class Route {
                 }
                 return '(?P<'.$matches[1].'>[^/\?]+)';
             },
-            $this->pattern
+            $regex
         );
 
         // Fix trailing slash
-        if ($char === '/') {
+        if ($last_char === '/') {
             $regex .= '?';
         }
         // Allow trailing slash
@@ -114,7 +127,7 @@ class Route {
             }
 
             if ($this->pass) {
-                array_push($this->params, $this);
+                $this->params[] = $this;
             }
 
             $this->regex = $regex;
