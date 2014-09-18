@@ -22,8 +22,25 @@
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
 
-    require 'app/App.php';
+    require_once 'app/lib/flight/Flight.php';
+    require_once 'app/Handler.php';
 
-    $app = new CmOta();
-    $app->run();
-?>
+    // Root dir
+    Flight::route('/', function(){
+        Flight::redirect('/_builds/');
+    });
+
+    // All builds
+    Flight::route('/api', array('Handler','HandleApi'));
+
+    // Deltas
+    Flight::route('/api/v1/build/get_delta', array('Handler','HandleGetDelta'));
+
+    // 404
+    Flight::map('notFound', function(){
+        echo 'Sorry, 404!'; // Display custom 404 page
+    });
+
+    // Run
+    Flight::start();
+

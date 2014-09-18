@@ -22,12 +22,6 @@
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
 
-    require_once 'lib/flight/Flight.php';
-
-    // Memcached
-    global $MEMCACHED;
-    $MEMCACHED = NULL;
-
     // Handler class
     class Handler
     {
@@ -85,28 +79,3 @@
         }
     }
 
-    // CmOta class
-    class CmOta
-    {
-        public function run() {
-            Flight::start();
-        }
-
-        public function __construct() {
-            // Root dir
-            Flight::route('/', function(){
-                Flight::redirect('/_builds/');
-            });
-
-            // All builds
-            Flight::route('/api', array('Handler','HandleApi'));
-
-            // Deltas
-            Flight::route('/api/v1/build/get_delta', array('Handler','HandleGetDelta'));
-
-            // 404
-            Flight::map('notFound', function(){
-                 echo 'Sorry, 404!'; // Display custom 404 page
-            });
-        }
-    };

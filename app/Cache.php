@@ -22,6 +22,10 @@
         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     */
 
+    // Memcached
+    global $MEMCACHED;
+    $MEMCACHED = NULL;
+
     class Cache
     {
         // Map for shared memcached:
