@@ -45,7 +45,7 @@
                     // Source_incremental is provided by CMUpdater
                     if (!empty($postJson->params->source_incremental)) {
                         // Offer only new builds after source rom.
-                        list(,,$after,) = Cache::mcFind($postJson->params->source_incremental);
+                        list(,$after,$releasetype,) = Cache::mcFind($postJson->params->source_incremental);
                         if (in_array('snapshot', $channels) && in_array('nightly', $channels)) {
                             $after = 0; // 'All versions' is selected, disable time check and offer older builds.
                         }

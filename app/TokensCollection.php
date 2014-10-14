@@ -75,13 +75,14 @@
             $count = count($this->list);
             for ($i = 0; $i < $count; $i++) {
                  $token = $this->list[$i];
+                 $channel = ($token->releasetype == 'RELEASE') ? 'stable' : strtolower($token->releasetype);
                  $ret[] = array(
                     'url' => $token->url,
                     'timestamp' => $token->timestamp,
                     'md5sum' => $token->md5sum,
                     'filename' => $token->filename,
                     'incremental' => $token->incremental,
-                    'channel' => $token->channel,
+                    'channel' => $channel,
                     'changes' => $token->changes,
                     'api_level' => $token->api_level
                 );
