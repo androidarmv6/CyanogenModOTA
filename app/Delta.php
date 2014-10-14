@@ -31,27 +31,27 @@
                 $source_incremental == $target_incremental) {
                 return $ret;
             }
-            list($source_device, $source_channel, $source_timestamp, $source_zip) = Cache::mcFind($source_incremental);
+            list($source_device, $source_timestamp, $source_releasetype, $source_zip) = Cache::mcFind($source_incremental);
             if (empty($source_zip)) {
                 return $ret;
             }
-            list($target_device, $target_channel, $target_timestamp, $target_zip) = Cache::mcFind($target_incremental);
+            list($target_device, $target_timestamp, $target_releasetype, $target_zip) = Cache::mcFind($target_incremental);
             if (empty($target_zip)) {
                 return $ret;
             }
             if (($source_timestamp > $target_timestamp) ||
-                ($source_channel != $target_channel) ||
+                ($source_releasetype != $target_releasetype) ||
                 ($source_device != $target_device)) {
                 return $ret;
             }
-            $channelDir = ($target_channel == 'stable') ? 'stable' : '';
+            $channelDir = ($target_releasetype == 'RELEASE') ? 'stable' : '';
             $deltaFile = 'incremental-'.$source_incremental.'-'.$target_incremental.'.zip';
             $deltaFullPath = realpath('./_deltas/'. $target_device . '/' . $channelDir) . '/' . $deltaFile;
             if (file_exists($deltaFullPath) && file_exists($deltaFullPath.'.md5sum')) {
                 $ret = array(
                    'date_created_unix' => filemtime($deltaFullPath),
                    'filename' => $deltaFile,
-                   'download_url' => Utils::getUrl($deltaFile, $target_device, true, $target_channel),
+                   'download_url' => Utils::getUrl($deltaFile, $target_device, true, $target_releasetype),
                    'md5sum' => Utils::getMD5($deltaFullPath),
                    'incremental' => $target_incremental
                 );

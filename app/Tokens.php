@@ -29,7 +29,7 @@
         public $incremental = '';
         public $timestamp = 0;
         public $md5sum = '';
-        public $channel = '';
+        public $releasetype = 'NIGHTLY';
         public $filename = '';
         public $url = '';
         public $changes = '';
@@ -41,10 +41,10 @@
             $this->api_level,
             $this->incremental,
             $this->timestamp,
+            $this->releasetype,
             $this->md5sum) = Cache::mcCacheProps($physicalPath.'/'.$fileName, $device, $channel);
-            $this->channel = $channel;
             $this->filename = $fileName;
-            $this->url = Utils::getUrl($fileName, $device, false, $channel);
+            $this->url = Utils::getUrl($fileName, $device, false, $this->releasetype);
             $this->changes = str_replace('.zip', '.txt', $this->url);
         }
     };

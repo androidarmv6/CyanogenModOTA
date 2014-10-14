@@ -29,8 +29,8 @@
     class Cache
     {
         // Map for shared memcached:
-        // 1) [incrementalno] = array(device, channel, timestamp, fullpathnameofota.zip)
-        // 2) [fullpathnameofota.zip] = array(device, api_level, incremental, timestamp, md5sum)
+        // 1) [incrementalno] = array(device, timestamp, releasetype, fullpathnameofota.zip)
+        // 2) [fullpathnameofota.zip] = array(device, api_level, incremental, timestamp, releasetype, md5sum)
         public static function registerMemcached()
         {
             global $MEMCACHED;
@@ -45,17 +45,17 @@
         {
             global $MEMCACHED;
 
-            list($device, $channel, $timestamp, $zip) = $MEMCACHED->get($incremental);
+            list($device, $timestamp, $releasetype, $zip) = $MEMCACHED->get($incremental);
             if (!empty($zip) && !file_exists($zip))
             {
                 $MEMCACHED->delete($zip);
                 $MEMCACHED->delete($incremental);
                 $zip = NULL;
+                $releasetype = NULL;
                 $timestamp = 0;
-                $channel = NULL;
                 $device = NULL;
             }
-            return array($device, $channel, $timestamp, $zip);
+            return array($device, $timestamp, $releasetype, $zip);
         }
 
         public static function mcCacheProps($filePath, $device, $channel)
@@ -72,9 +72,14 @@
                     $api_level = intval(Utils::getBuildPropValue($buildpropArray, 'ro.build.version.sdk'));
                     $incremental = Utils::getBuildPropValue($buildpropArray, 'ro.build.version.incremental');
                     $timestamp = intval(Utils::getBuildPropValue($buildpropArray, 'ro.build.date.utc'));
-                    $cache = array($device, $api_level, $incremental, $timestamp, Utils::getMD5($filePath));
+                    $releasetype = Utils::getBuildPropValue($buildpropArray, 'ro.cm.releasetype'); // 10-JUL-2014
+                    if (empty($releasetype)) {
+                        $releasetype = ($channel == 'stable') ? 'RELEASE' : 'NIGHTLY';
+                    }
+                    $cache = array($device, $api_level, $incremental, $timestamp, $releasetype, Utils::getMD5($filePath));
+                    $incrementalCache = array($device, $timestamp, $releasetype, $filePath);
                     $MEMCACHED->set($filePath, $cache);
-                    $MEMCACHED->set($incremental, array($device, $channel, $timestamp, $filePath));
+                    $MEMCACHED->set($incremental, $incrementalCache);
                 } else {
                     throw new Exception("$device: $filePath is in invalid path");
                 }
