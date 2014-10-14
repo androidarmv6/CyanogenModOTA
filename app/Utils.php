@@ -24,9 +24,9 @@
 
     class Utils {
 
-        public static function getUrl($fileName, $device, $isDelta, $channel) {
+        public static function getUrl($fileName, $device, $isDelta, $target_releasetype) {
             $dldir = $isDelta ? '_deltas' : '_builds';
-            $channelDir = ($channel == 'stable') ? 'stable/' : '';
+            $channelDir = ($target_releasetype == 'RELEASE') ? 'stable/' : '';
             return 'http://' . $_SERVER['SERVER_NAME'] . '/' . $dldir . '/' . $device . '/' . $channelDir . $fileName;
         }
 

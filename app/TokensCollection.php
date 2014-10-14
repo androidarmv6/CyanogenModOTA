@@ -35,15 +35,15 @@
                 $stable_limit = (int)($limit / 4);
             }
             if (in_array('stable', $channels)) {
-                $total = $this->add($physicalPath.'/stable', $device, $after, 'stable', $stable_limit);
+                $total = $this->add($physicalPath.'/stable', $device, $after, $stable_limit);
             }
             if (in_array('nightly', $channels)) {
                 $nightly_limit = $limit - $total;
-                $this->add($physicalPath, $device, $after, 'nightly', $nightly_limit);
+                $this->add($physicalPath, $device, $after, $nightly_limit);
             }
         }
 
-        private function add($dir, $device, $after, $channel, $limit)
+        private function add($dir, $device, $after, $limit)
         {
             if (!file_exists($dir))
                 return 0;
@@ -53,7 +53,7 @@
             foreach ($dirIterator as $fileinfo) {
                 if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip' &&
                     file_exists($dir.'/'.$fileinfo->getFilename().'.md5sum')) {
-                    $token = new Token($fileinfo->getFilename(), $dir, $device, $channel);
+                    $token = new Token($fileinfo->getFilename(), $dir, $device);
                     if ($token->timestamp > $after) {
                         $sortedArray[] = $token;
                     }
@@ -75,13 +75,14 @@
             $count = count($this->list);
             for ($i = 0; $i < $count; $i++) {
                  $token = $this->list[$i];
+                 $channel = ($token->releasetype == 'RELEASE') ? 'stable' : strtolower($token->releasetype);
                  $ret[] = array(
                     'url' => $token->url,
                     'timestamp' => $token->timestamp,
                     'md5sum' => $token->md5sum,
                     'filename' => $token->filename,
                     'incremental' => $token->incremental,
-                    'channel' => $token->channel,
+                    'channel' => $channel,
                     'changes' => $token->changes,
                     'api_level' => $token->api_level
                 );
