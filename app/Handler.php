@@ -42,15 +42,18 @@
                     $limit = empty($postJson->params->limit) ? 25 : intval($postJson->params->limit);
                     $channels = empty($postJson->params->channels) ? array() : $postJson->params->channels;
                     Cache::registerMemcached();
-                    // Source_incremental is provided by CMUpdater
+                    // Source_incremental is provided by CMUpdater, and indicates installed rom.
                     if (!empty($postJson->params->source_incremental)) {
-                        // Offer only new builds after source rom.
+                        // Offer only new builds after installed rom.
                         list(,$after,$releasetype,) = Cache::mcFind($postJson->params->source_incremental);
-                        if (in_array('snapshot', $channels) && in_array('nightly', $channels)) {
-                            $after = 0; // 'All versions' is selected, disable time check and offer older builds.
-                        }
-                        if (!in_array('stable', $channels)) {
-                            $channels[] = 'stable'; // We offer stable releases by default for CMUpdater
+                        if ($after > 0 && !empty($releasetype)) {
+                            $channels = array(); // Only list updates for current channel
+                            if ($releasetype == 'RELEASE') {
+                                $channels[] = 'stable';
+                            }
+                            elseif ($releasetype == 'NIGHTLY') {
+                                $channels[] = 'nightly';
+                            }
                         }
                     }
                     $tokens = new TokenCollection($channels, $devicePath, $device, $after, $limit);
