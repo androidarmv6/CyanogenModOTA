@@ -31,12 +31,12 @@
                 $source_incremental == $target_incremental) {
                 return $ret;
             }
-            list($source_device, $source_timestamp, $source_releasetype, $source_zip) = Cache::mcFind($source_incremental);
-            if (empty($source_zip)) {
+            list($source_device, $source_timestamp, $source_releasetype) = Cache::mcFind($source_incremental);
+            if (empty($source_device)) {
                 return $ret;
             }
-            list($target_device, $target_timestamp, $target_releasetype, $target_zip) = Cache::mcFind($target_incremental);
-            if (empty($target_zip)) {
+            list($target_device, $target_timestamp, $target_releasetype) = Cache::mcFind($target_incremental);
+            if (empty($target_device)) {
                 return $ret;
             }
             if (($source_timestamp > $target_timestamp) ||

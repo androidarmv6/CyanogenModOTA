@@ -55,7 +55,7 @@
                 $timestamp = 0;
                 $device = NULL;
             }
-            return array($device, $timestamp, $releasetype, $zip);
+            return array($device, $timestamp, $releasetype);
         }
 
         public static function mcCacheProps($filePath, $device, $channel)

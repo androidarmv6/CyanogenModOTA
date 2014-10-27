@@ -35,27 +35,31 @@
             $ret = array('id' => null, 'result' => array(), 'error' => null);
             $postJson = json_decode(Flight::request()->getBody());
             if ($postJson != NULL && !empty($postJson->params) && !empty($postJson->params->device)) {
-                $device = $postJson->params->device;
-                $devicePath = realpath('./_builds/'.$device);
-                if (file_exists($devicePath)) {
-                    $after = 0;
-                    $limit = empty($postJson->params->limit) ? 25 : intval($postJson->params->limit);
-                    $channels = empty($postJson->params->channels) ? array() : $postJson->params->channels;
-                    Cache::registerMemcached();
-                    // Source_incremental is provided by CMUpdater, and indicates installed rom.
-                    if (!empty($postJson->params->source_incremental)) {
-                        // Offer only new builds after installed rom.
-                        list(,$after,$releasetype,) = Cache::mcFind($postJson->params->source_incremental);
-                        if ($after > 0 && !empty($releasetype)) {
-                            $channels = array(); // Only list updates for current channel
-                            if ($releasetype == 'RELEASE') {
-                                $channels[] = 'stable';
-                            }
-                            elseif ($releasetype == 'NIGHTLY') {
-                                $channels[] = 'nightly';
-                            }
+                $after = 0; // Offer only new builds after installed rom.
+                $channels = array(); // Only list updates for current channel
+                $device = '';
+                Cache::registerMemcached();
+                // Source_incremental is provided by CMUpdater, and indicates installed rom.
+                if (!empty($postJson->params->source_incremental)) {
+                    list($device,$after,$releasetype) = Cache::mcFind($postJson->params->source_incremental);
+                    if (!empty($releasetype)) {
+                        if ($releasetype == 'RELEASE') {
+                            $channels[] = 'stable';
+                        }
+                        elseif ($releasetype == 'NIGHTLY') {
+                            $channels[] = 'nightly';
                         }
                     }
+                }
+                if (empty($channels) && !empty($postJson->params->channels)) {
+                    $channels = $postJson->params->channels;
+                }
+                if (empty($device)) {
+                    $device = preg_replace("/[^a-zA-Z0-9]/", "", $postJson->params->device);
+                }
+                $devicePath = realpath('./_builds/'.$device);
+                if (file_exists($devicePath)) {
+                    $limit = empty($postJson->params->limit) ? 25 : intval($postJson->params->limit);
                     $tokens = new TokenCollection($channels, $devicePath, $device, $after, $limit);
                     $ret['result'] = $tokens->getUpdateList();
                  }
