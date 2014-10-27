@@ -20,6 +20,7 @@ I've implemented a [simple script made for NodeJS](https://github.com/julianxhok
 - For more information: build/target/product/security/README
 
 ##Changelog
+- 1.2.6: CMUpdater:only list updates for current channel. No more mix of channels. Remove unnecessary chars from device param.
 - 1.2.5: Provide 25% stable build if all channels are requested, Update flight engine to v1.2.5
 - 1.2.4: Update flight engine to v1.2
 - 1.2.3: Final. Reduce memcache usage. Add example nginx config.
