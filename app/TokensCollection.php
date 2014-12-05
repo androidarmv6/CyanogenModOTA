@@ -49,18 +49,11 @@
                 return 0;
 
             $tokens = Cache::mcDir($dir, $channel, $device);
-            $sortedArray = array();
-            foreach ($tokens as $token) {
-                if ($token->timestamp > $after) {
-                    $sortedArray[] = $token;
-                }
-            }
-            $count = count($sortedArray);
             $i = 0;
-            if ($count > 0) {
-                usort($sortedArray, function($a,$b){ /*Reverse order (b-a)*/ return $b->timestamp - $a->timestamp; });
-                for($i = 0; $i < $count && $i < $limit; $i++) {
-                    $this->list[] = $sortedArray[$i];
+            foreach ($tokens as $token) {
+                if ($token->timestamp > $after && $limit-- > 0) {
+                    $this->list[] = $token;
+                    $i++;
                 }
             }
             return $i;

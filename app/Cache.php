@@ -101,6 +101,7 @@
                         $tokens[] = new Token($fileinfo->getFilename(), $dir, $device, $channel);
                     }
                 }
+                usort($tokens, function($a,$b){ /*Reverse order (b-a)*/ return $b->timestamp - $a->timestamp; });
                 $MEMCACHED->set($dir, $tokens, 300); // 5 minutes
             }
             return $tokens;
