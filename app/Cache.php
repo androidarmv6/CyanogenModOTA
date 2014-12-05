@@ -86,4 +86,23 @@
             }
             return $cache;
         }
+
+        public static function mcDir($dir, $channel, $device)
+        {
+            global $MEMCACHED;
+
+            $tokens = $MEMCACHED->get($dir);
+            if (!$tokens && Memcached::RES_NOTFOUND == $MEMCACHED->getResultCode()) {
+                $tokens = array();
+                $dirIterator = new DirectoryIterator($dir);
+                foreach ($dirIterator as $fileinfo) {
+                    if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip' &&
+                        file_exists($dir.'/'.$fileinfo->getFilename().'.md5sum')) {
+                        $tokens[] = new Token($fileinfo->getFilename(), $dir, $device, $channel);
+                    }
+                }
+                $MEMCACHED->set($dir, $tokens, 300); // 5 minutes
+            }
+            return $tokens;
+        }
     };

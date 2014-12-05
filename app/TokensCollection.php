@@ -48,15 +48,11 @@
             if (!file_exists($dir))
                 return 0;
 
+            $tokens = Cache::mcDir($dir, $channel, $device);
             $sortedArray = array();
-            $dirIterator = new DirectoryIterator($dir);
-            foreach ($dirIterator as $fileinfo) {
-                if ($fileinfo->isFile() && $fileinfo->getExtension() == 'zip' &&
-                    file_exists($dir.'/'.$fileinfo->getFilename().'.md5sum')) {
-                    $token = new Token($fileinfo->getFilename(), $dir, $device, $channel);
-                    if ($token->timestamp > $after) {
-                        $sortedArray[] = $token;
-                    }
+            foreach ($tokens as $token) {
+                if ($token->timestamp > $after) {
+                    $sortedArray[] = $token;
                 }
             }
             $count = count($sortedArray);
