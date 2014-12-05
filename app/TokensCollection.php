@@ -49,14 +49,15 @@
                 return 0;
 
             $tokens = Cache::mcDir($dir, $channel, $device);
-            $i = 0;
-            foreach ($tokens as $token) {
-                if ($token->timestamp > $after && $limit-- > 0) {
-                    $this->list[] = $token;
-                    $i++;
+            $tokensLen = count($tokens);
+            $top = 0;
+            for ($i = 0; $i < $tokensLen && $top < $limit; $i++) {
+                if ($tokens[$i]->timestamp > $after) {
+                    $this->list[] = $tokens[$i];
+                    $top++;
                 }
             }
-            return $i;
+            return $top;
         }
 
         public function getUpdateList() {
